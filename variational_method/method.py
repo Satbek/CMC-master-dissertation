@@ -46,7 +46,7 @@ def _get_f_matrix(g1, g2, h1, h2):
     return _f1(g1, h1, h2) + _f2(g2, h1, h2)
 
 
-def method(g1, g2, h1, h2, alpha, gamma):
+def method(g1, g2, h1, h2, alpha, gamma, s):
     """
     Метод. Принимает градиенты по x, y. Параметры регуляризации alga, gamma.
     Возвращает восстановленный волновой фронт.
@@ -54,9 +54,10 @@ def method(g1, g2, h1, h2, alpha, gamma):
     :param g2: 2d array. Градиент по y
     :param h1: Шаг сетки по x
     :param h2: Шаг сетки по y
-    :param alpha: параметр регуляризации
     :param gamma: параметр регуляризации
-    :return:
+    :param alpha: параметр регуляризации
+    :param s: параметр регуляризации
+    :return: 2d array
     """
     f = np.fft.fft2(_get_f_matrix(g1, g2, h1, h2))
     lambda1 = eigenvalues.get_lambda(f.shape[0], h1)
@@ -69,7 +70,7 @@ def method(g1, g2, h1, h2, alpha, gamma):
     for k in range(res.shape[0]):
         for l in range(res.shape[1]):
             t = lambda1[k] * mu2[l] + mu1[k] * lambda2[l] + alpha * mu1[k] * mu2[l]\
-                + gamma * lambda1[k] * lambda2[l]
+                + gamma * (lambda1[k] * lambda2[l]) ** s
             res[k, l] = f[k, l] / t
     res = np.fft.ifft2(res)
     return np.real(res)

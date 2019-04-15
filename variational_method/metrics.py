@@ -14,4 +14,7 @@ def C (u, v, mask=None):
 def L2 (u, v, mask=None):
     if mask is None:
         mask = np.ones(u.shape)
-    return np.sqrt(((u * mask - v * mask) ** 2) / np.min(np.count_nonzero(u * mask), np.count_nonzero(v * mask)))
+    tmp1 = np.sqrt(np.sum(((u * mask - v * mask) ** 2)) /
+                   np.min([np.count_nonzero(u * mask), np.count_nonzero(v * mask)]))
+    tmp2 = np.sqrt(np.sum(u**2 * mask) / np.count_nonzero(u * mask))
+    return tmp1 / tmp2

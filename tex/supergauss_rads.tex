@@ -1,0 +1,355 @@
+\documentclass[oneside, final, 14pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[russianb]{babel}
+\usepackage{vmargin}
+\usepackage{blindtext}
+\setpapersize{A4}
+\setmarginsrb{2cm}{1.5cm}{1cm}{1.5cm}{0pt}{0mm}{0pt}{13mm}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{algorithm2e}
+\usepackage{mathrsfs}
+\bibliographystyle{unsrt}
+
+%\usepackage{biblatex}
+\begin{document}
+
+\pagenumbering{arabic}
+\tableofcontents
+
+
+
+\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+
+
+\newpage
+\section*{Введение}
+\addcontentsline{toc}{section}{Введение}
+В документе приведено описание алгоритма восстановления волнового фронта, а также исследование зависимости точности восстановления от 
+радиуса суперагаусса.
+
+\newpage
+\section{Описание алгоритма}
+В вариационном методе задача восстановление формулируется в виде задачи минимизации целевого функционала невязки между производными 
+искомой функции по $x,\,y$ и соответствующими наклонами волнового фронта $g_1,\, g_2$. Метод заключается в построении проекционно-разностной 
+схемы и решении её методом Фурье. Рассмотрим функцию от двух переменных $u(x,y)$ , ее производные имеют вид $u_x(x,y)$, $u_y(x,y)$.
+Введем сетку: 
+\begin{equation}
+\omega_h = \{(x_i, y_j) \,:\, x_i = ih_1,\,y_j = jh_2,\, i = 0..N_1,\, j = 0..N_2;\; x_{N_1} = 1, y_{N_2} = 1, x_0 = -1, y_0 = -1\}
+\end{equation}
+Матрицы $U,\, g_1,\, g_2$ являются дискретными представлениями функций $u(x,y) ,\, u_x(x,y) ,\, u_y(x,y)$ на сетке $\omega_h$. Задача восстановления волнового фронта состоит в приближенном восстановлении матрицы матрицы $U$, по известным наклонам $g_1,\, g_2$.
+
+Рассмотрим функционал $$J(u) = \int \limits_{-1}^{1} \int \limits_{-1}^{1} ((u_x - g_1)^2 + (u_y-g_2)^2 + \alpha u^2 )dxdy$$
+Функция $u$ принадлежит соболевскому пространству $W_{2}^{1}(\Omega)$, пространству периодических функций, определенных в области $\Omega = [-1,\,1]  \times [-1,\,1]$ и имеющих суммируемые с квадратом первые обобщенные производные по $x,\,y$. Минимизация функционала позволяет найти функцию $u$ с наименьшими квадратичными отклонениями градиента от измеренных локальных наклонах $g_1,\, g_2$. Дополнительное слагаемое $\alpha u^2$ , является регуляризатором Тихонова с параметром $\alpha$. Благодаря регуляризатору устраняются проблемы единственности минимума функционала и возможной погрешности исходных данных. Необходимым условием минимума функционала является:
+\begin{equation}\label{nessasary condition}
+(u_x, \phi_x) + (u_y,\phi_y) + \alpha(u, \phi) = (g_1, \phi_x) + (g_2, \phi_y),\;\;\forall\phi \in W_{2}^{1}(\Omega)
+\end{equation}
+
+Здесь $(\cdot\,,\cdot)$ - скалярное произведение в $L_2(\Omega)$.
+
+Определим на $\Omega$ систему финитных базисных функций $\{\phi_i(x)\} ,\, i \in [0,\,N-1]$.
+$$
+\phi_i(x) = 
+ \begin{cases}
+  \frac{x-x_{i-1}}{h} , x \in [x_{i-1},x_i] \\ 
+   \frac{x_{i+1} - x}{h}, x \in [x_{i},x_{i+1}]   \\
+   0 \notin [x_{i-1},x_{i+1}].
+ \end{cases} i \in [1, N-1];\;\;\;
+\phi_0(x) = 
+ \begin{cases}
+  \frac{x_1-x}{h} , x \in [x_{0},x_1] \\ 
+   \frac{x - x_{N-1}}{h}, x \in [x_{N-1},x_{N}]   \\
+   0 \in [x_{1},x_{N-1}].
+ \end{cases}
+$$
+
+Введем пространство конечных элементов $W_h = \mathscr{L}\{\phi_i(x)\phi_j(y)\}_{i,j=0}^{N_1 - 1,N_2-1} \in W_{2}^{1}(\Omega)$. 
+Проекционная схема решения ($\ref{nessasary condition}$) состоит в нахождении функции $u^h \subset W_h$, которая при любых $k,\,l$ удовлетворяет тожеству:
+\begin{equation}\label{mult diff scheme}
+(u_x^h,\phi_x)+(u_y^h,\phi_y) + \alpha(u^h,\phi) = (g^1,\phi_x) + (g^2,\phi_y)
+\end{equation}
+Где:
+$$\phi(x,y) = \phi_k(x)\phi_l(y)$$
+$$u^h(x,y) = \sum \limits_{i=0}^{N_1-1} \sum \limits_{j=0}^{N_2-1} u_{ij}\phi_i(x)\phi_j(y)$$
+$$u_{ij} = u(x_i,y_i)$$
+
+
+
+Подставив в (\ref{mult diff scheme}) необходимые значения получим разностную схему
+\begin{equation}
+B_2 \Lambda_1 u + B_1 \Lambda_2 u + \alpha B_1 B_2 u = F(g_1,g_2)
+\end{equation}
+Правая часть $F(g_1,g_2)$ не определена однозначно и будет уникальной для каждого представления $g_1,\,g_2$.
+Введем дополнительный регуляризатор $\gamma(\Lambda_1\Lambda_2)^s u$. В таком случае схема будет иметь вид:
+\begin{equation}\label{scheme}
+B_2 \Lambda_1 u + B_1 \Lambda_2 u + \alpha B_1 B_2 u +\gamma(\Lambda_1\Lambda_2)^s u = F(g_1,g_2)
+\end{equation}
+Разделим обе части равенства на $h_1h_2$. Это необходимо будет участь в дальнейшем при получении $F$.
+В этом случае операторы $\Lambda_{1,2},\,B_{1,2}$ в матричной форме имеют вид:
+$$\Lambda_i = \frac{1}{h_i^2}
+\begin{bmatrix}
+2 & -1 & 0 & \ldots & 0 & 0 & -1\\
+-1 & 2 & -1 & \ldots & 0 & 0 & 0\\
+0 & -1 & 2 & \ldots &0 & 0 & 0\\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots &\\
+0 & 0 & 0 & \ldots & -1 & 2 & -1\\
+-1 & 0 & 0 & \ldots & 0 & -1 & 2
+\end{bmatrix}
+$$
+$$
+\qquad B_i = 
+\begin{bmatrix}
+\frac{2}{3} & \frac{1}{6} & 0 & \ldots & 0 & 0 & \frac{1}{6}\\
+\frac{1}{6} & \frac{2}{3} & \frac{1}{6} & \ldots & 0 & 0 & 0\\
+0 & \frac{1}{6} & \frac{2}{3} & \ldots &0 & 0 & 0\\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots &\\
+0 & 0 & 0 & \ldots & \frac{1}{6} & \frac{2}{3} & \frac{1}{6}\\
+\frac{1}{6} & 0 & 0 & \ldots & 0 & \frac{1}{6} & \frac{2}{3} \\
+\end{bmatrix} = E - \frac{h_i^2}{6}\Lambda_i$$
+Благодаря делению на $h_1h_2\;\Lambda$ является оператором второй разностной производной.
+Воспользуемся методом Фурье для решения разностной схемы. Будем искать собственные функции оператора $\Lambda$ в виде:
+$$v_k = e^{ikx}$$
+Напомним решение задачи Штурма-Лиувилля в $H_h$ для оператора второй разностной производной:
+$$\begin{cases}
+y_{\overline{x}x} + \lambda y_i = 0,\quad i = \overline{1\ldots N-1} \\
+y_0 = y_N
+\end{cases}$$
+Подставив в уравнение получим собственные значения 
+$$
+\lambda_k = \frac{4}{h^2} \sin^2(\frac{kh}{2}),\quad k = \overline{0 \ldots N-1}
+$$
+Так как $B = E - \frac{h_i^2}{6}\Lambda_i$, то собственными значениями оператора B будут:
+$$
+\mu_k = 1 - \frac{h^2}{6}\lambda_k,\quad k = \overline{0 \ldots N-1}
+$$
+
+Будем искать решение в виде разложения по собственным функциям:
+$$u_{ij} = \sum \limits_{k=0}^{N_1 - 1} \sum \limits_{l=0}^{N_2 - 1} \overline{u}_{kl}v_k(x_i)v_l(y_j)$$
+Подставив в разностное уравнение наше решение, и используя линейную независимость собственных функций, получим:
+$$\mu_l \lambda_k + \mu_k \lambda_l + \alpha \mu_k \mu_l + \gamma \lambda_k \lambda_l = f_{kl}$$
+Где $f_{kl}$ - преобразование Фурье $F(g_1,g_2)$.
+Таким образом:
+$$u_{kl} = \frac{f_{kl}}{\mu_l \lambda_k + \mu_k \lambda_l + \alpha \mu_k \mu_l + \gamma (\lambda_k \lambda_l)^s}$$
+
+Как было отмечено выше вид $g_1,\,g_2$ определен неоднозначно. Рассмотрим несколько вариантов представления $g_1, g_2$ и получим для каждого $F(g_1,g_2)$.
+
+$g_{1,2}(x,y) = \sum \limits_{i=0}^{N_1-1} \sum \limits_{j=0}^{N_2-1}g_{1,2}^{ij}\phi_i(x)\phi_j(y),\, g_{ij} = g(x_i,y_j)$
+
+Учитывая то, что правая часть в (\ref{scheme}) была нормирована на $h_1h_2$
+\begin{equation}\label{F}
+F = \frac{1}{h_1h_2}((g_1,\phi_x) + (g_2,\phi_y))
+\end{equation} 
+\subsubsection{Разложение точных значений производных по базисным функциям $W_h$}
+$$g_{1,2}(x,y) = \sum \limits_{i=0}^{N_1-1} \sum \limits_{j=0}^{N_2-1}g_{1,2}^{ij}\phi_i(x)\phi_j(y),\, g_{ij} = g(x_i,y_j)$$
+Найдем $F(g_1,g_2)$. 
+Пусть $F_1 = \frac{1}{h_1h_2}(g_1,\phi_x),\, F_2 = \frac{1}{h_1h_2}(g_2, \phi_y)$.
+
+\begin{align*}
+&F_1 = (g_1, \phi_x) = \sum \limits_{n = 0}^{N_1 - 1} \sum \limits_{m = 0}^{N_2 - 1} \int \limits_0^{2\pi}\int \limits_0^{2\pi} g_1^{nm}\phi_n(x)\phi_m(y) \phi'_k(x) \phi_l(y) dx dy =\\& 
+\sum \limits_{n = 0}^{N_1 - 1} \sum \limits_{m = 0}^{N_2 - 1} g_1^{nm} \int \limits_0^{2\pi} \phi_n(x) \phi'_k(x) dx \int \limits_0^{2\pi} \phi_m(y) \phi_l(y) dy
+\end{align*}
+
+$\int \limits_0^{2\pi} \phi_n(x) \phi'_k(x) dx  = G_{kn} =
+\begin{cases} 
+    0, \, k = n \\ 
+    -1, \, k - n = -1 \\
+    1, \, n - k = 1 \\
+    0, else
+\end{cases}
+\int \limits_0^{2\pi} \phi_m(y) \phi_l(y) dy = B_{ml} =
+\begin{cases}
+    \frac{2}{3}, \, m = l \\
+    \frac{1}{6}, \mid m-l \mid = 1\\
+    0, else
+\end{cases}$
+
+$(g_1, \phi_x) = \sum \limits_{n = 0}^{N_1 - 1} \sum \limits_{m = 0}^{N_2 - 1} g_1^{nm} G_{kn} B_{ml} = 
+\sum \limits_{n = 0}^{N_1 - 1} \big(\sum \limits_{m = 0}^{N_2 - 1} G_{kn} g_1^{nm} \big) B_{ml} = G_1 g_1 B_2
+$
+
+Аналогично получаем, что $F_2 = B_1 g_2 G_2$.
+Таким образом $F = G_1 g_1 B_2 + B_1 g_2 G_2$.
+Матрицы $G_1,\,G_2$ имеют следующий вид:
+$$G_1 = \frac{1}{2h_1}
+\begin{bmatrix}
+0 & -1 & 0 & \ldots & 0 & 0 & 1\\
+1 & 0 & 1 & \ldots & 0 & 0 & 0\\
+0 & 1 & 0 & \ldots &0 & 0 & 0\\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots &\\
+0 & 0 & 0 & \ldots & 1 & 0 & -1\\
+-1 & 0 & 0 & \ldots & 0 & 1 & 0
+\end{bmatrix}
+$$
+$$G_2 = \frac{1}{2h_2}
+\begin{bmatrix}
+0 & 1 & 0 & \ldots & 0 & 0 & -1\\
+-1 & 0 & 1 & \ldots & 0 & 0 & 0\\
+0 & -1 & 0 & \ldots &0 & 0 & 0\\
+\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots &\\
+0 & 0 & 0 & \ldots & -1 & 0 & 1\\
+1 & 0 & 0 & \ldots & 0 & -1 & 0
+\end{bmatrix}
+$$
+
+$$G_2 = \frac{h_1}{h_2} G_1^T$$
+
+
+\newpage
+\section{Исследование точности восстановления вариционного метода от радиуса супергаусса}
+Необходимо исследовать точность восстановления супергаусса от радиуса суперагусса.
+
+
+В качетсве области берется квадрат $\Omega = [-1,1] \times  [-1,1]$, используется прямоугольная сетка размером $512 \times 512$. 
+В качестве исходного волнового фронта берутся полиномы Цернике, заданные на всей области $\Omega$. Обозначим исходный в.ф. как $U$. 
+Наклонами волнового фронта считаем первые производные по $x, y$, вычисленные аналитически, умноженные на супергаусс. Умножение на супрегаусс обеспечивает периодичность наклонов.
+Восстанавливаем волновой фронт.
+Полученный в.ф. обозначим как $\widetilde{U}$. Сравниваются отнонормированные исходный волновой фронт $U$ и восстановленный $\widetilde{U}$ в круге($\Omega_0$), радиусом $r_c = 0.4 r$.
+
+Параметры метода : $\alpha = 10^{-4}, \gamma = 0.0028, s=0.842$.
+
+Формула супергаусса:
+$$
+e^{-(\frac{x^2 + y^2}{r^2})^N}
+$$
+где, $r$ - радиус супергаусса, $N$ - степень.
+
+В расчетах используется $N = 5$.
+Алгоритм нормировки принимает на вход двумерный массив, отнимает от всех его элементов минимальный, а затем делит на максимальный. В результате получается массив значения которого лежат в сегменте $[0,1]$.
+
+
+\begin{enumerate} 
+ 	\item $U_{tmp} = U - \min{U}$
+   	\item $U_{result} = \frac{U_{tmp}}{\max(U_{tmp})}$
+\end{enumerate}
+
+
+В качетсве метрик для сравнения исходного и восстановленного в.ф. используются относительные нормы $\mathbb{C},\ \mathbb{L}_2$, где $u$ - исходный волновой фронт.
+$$\Vert u - v\Vert_{\mathbb{C}} = \frac{\max\limits_{(x,y) \in \Omega_0} |u(x,y) - v(x,y)|}{\max\limits_{(x,y) \in \Omega_0} |u(x,y)|}$$
+$$\Vert u - v\Vert_{\mathbb{L}_2} = \frac{\Vert u - v \Vert_{\mathbb{L}_2(\Omega_0)}}{\Vert u \Vert_{\mathbb{L}_2(\Omega_0)}}$$
+\begin{algorithm}[H]
+	\KwData{$U$ - исходный волновой фронт, $g_1$ - наклон по x, $g_2$ - наклон по y}
+	$g_{1r}$ = \{\} , $g_{2r}$ = \{\} //наклоны умноженные на супергаусс соответсвующего радиуса r
+	
+	$U_r$ = \{\} //восстановленные волновые фронты при соответсвующих радиусах r
+	
+	$L_r$, $C_r$ = \{\}, \{\} //относительные нормы между исходным и восставноленным волновыми фронтами
+	 
+	\For{$r$ in supergauss\_radiuses} {
+		$g_{1r}[r]$, $g_{2r}[r]$ = $g_1 * supergauss_r$, $g_2 * supergauss_r$
+		
+		$U_r[r] = method(g_{1r}[r],g_{2r}[r], \alpha, \gamma, s)$
+		
+		//normalize - нормировка волнового фронта
+		
+		//mask - круг, в котором сравниваются волновые фронты
+
+		$mask = get\_mask(r_c = 0.4r)$
+		
+		$diff = normalize(U_r[r] * mask) - normalize(U * mask)$
+		
+		$L_r[r] = \Vert diff \Vert_{\mathbb{L}_2}$
+		
+		$C_r[r] = \Vert diff \Vert_{\mathbb{C}}$
+	}
+	\KwResult{$L_r, C_r$}
+	\caption{Алгоритм}
+\end{algorithm}
+\begin{center}
+Пример восстановления волнового фронта для полинома $Z_2^2 = \rho^2 \cos(2 \varphi) = (x^2 + y^2)\cos(2 \arctg\frac{x}{y} )$:
+\end{center}
+$$
+\frac{d}{dx} Z_2^2 = 2 \rho \frac{d\rho}{dx}  \cos(2 \varphi) - 2\rho^2 \sin(2 \varphi) \frac{d\varphi}{dx} 
+$$
+$$
+\frac{d}{dy} Z_2^2 = 2 \rho \frac{d\rho}{dy} \rho \cos(2 \varphi) - 2\rho^2 \sin(2 \varphi) \frac{d\varphi}{dy} 
+$$
+
+$$\frac{d\rho}{dx}  = \frac{x}{\sqrt{x^2 + y^2}}$$
+$$\frac{d\rho}{dy}  = \frac{y}{\sqrt{x^2 + y^2}}$$
+
+$$\frac{d\varphi}{dx}  = \frac{1}{y (1 + (\frac{x}{y})^2)}$$
+$$\frac{d\varphi}{dy}  = -\frac{x}{y^2 + (1 + (\frac{x}{y})^2)}$$
+
+
+
+\begin{figure}
+\center{\includegraphics[scale=0.5]{r^2cos(2phi).png}}
+\caption{Полином $Z_2^2$}
+\label{fig:image}
+\end{figure}
+
+Зависимость точности восстановления от радиуса супергаусса:
+\begin{figure}
+\begin{minipage}[h]{0.49\linewidth}
+\center{\includegraphics[width=0.9\linewidth]{C_norm_r^2cos(2phi).png}}
+\end{minipage}
+\hfill
+\begin{minipage}[h]{0.49\linewidth}
+\center{\includegraphics[width=0.9\linewidth]{L_2_normr^2cos(2phi).png}}
+\end{minipage}
+
+\label{ris:image1}
+\end{figure}
+
+\begin{center}
+Пример восстановления волнового фронта для полинома $Z_3^3 = \rho^3 \cos(3\varphi) = 
+\sqrt{x^2 + y^2}(x^2 + y^2)\cos(3 \arctg\frac{x}{y} )$:
+\end{center}
+$$
+\frac{d}{dx} Z_3^3 = 3 \rho^2 \frac{d\rho}{dx}  \cos(3 \varphi) - 3\rho^3 \sin(3 \varphi) \frac{d\varphi}{dx} 
+$$
+$$
+\frac{d}{dy} Z_3^3 = 3 \rho^2 \frac{d\rho}{dy} \rho \cos(3 \varphi) - 3\rho^3 \sin(3 \varphi) \frac{d\varphi}{dy} 
+$$
+\begin{figure}[h]
+	\center{\includegraphics[scale=0.5]{r^3cos(3phi).png}}
+	\caption{Полином $Z_3^3$}
+	\label{fig:image}
+\end{figure}
+
+Зависимость точности восстановления от радиуса супергаусса:
+\begin{figure}
+	\begin{minipage}[h]{0.49\linewidth}
+		\center{\includegraphics[width=0.9\linewidth]{C_norm_r^3cos(3phi).png}}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[h]{0.49\linewidth}
+		\center{\includegraphics[width=0.9\linewidth]{L_2_normr^3cos(3phi).png}}
+	\end{minipage}
+	
+	\label{ris:image1}
+\end{figure}
+
+\begin{center}
+Пример восстановления волнового фронта для полинома $Z_5^5 = \rho^5 \cos(5\varphi) = 
+\sqrt{x^2 + y^2}(x^2 + y^2)^2\cos(5 \arctg\frac{x}{y} )$:
+\end{center}
+$$
+\frac{d}{dx} Z_5^5 = 5 \rho^4 \frac{d\rho}{dx}  \cos(5 \varphi) - 5\rho^5 \sin(5 \varphi) \frac{d\varphi}{dx} 
+$$
+$$
+\frac{d}{dy} Z_5^5 = 5 \rho^4 \frac{d\rho}{dy} \rho \cos(5 \varphi) - 5\rho^5 \sin(5 \varphi) \frac{d\varphi}{dy} 
+$$
+\begin{figure}[h]
+	\center{\includegraphics[scale=0.5]{r^5cos(5phi).png}}
+	\caption{Полином $Z_5^5$}
+	\label{fig:image}
+\end{figure}
+
+Зависимость точности восстановления от радиуса супергаусса:
+\begin{figure}
+	\begin{minipage}[h]{0.49\linewidth}
+		\center{\includegraphics[width=0.9\linewidth]{C_norm_r^5cos(5phi).png}}
+	\end{minipage}
+	\hfill
+	\begin{minipage}[h]{0.49\linewidth}
+		\center{\includegraphics[width=0.9\linewidth]{L_2_normr^3cos(3phi).png}}
+	\end{minipage}
+	
+	\label{ris:image1}
+\end{figure}
+
+\end{document}
